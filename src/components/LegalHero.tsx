@@ -101,8 +101,8 @@ const LegalHero = () => {
             </Button>
             <Button 
               size="lg" 
-              variant="outline"
-              className="border-white text-white hover:bg-white hover:text-primary font-semibold px-8 py-4 text-lg"
+              variant="secondary"
+              className="bg-white/20 backdrop-blur-sm border border-white/40 text-white hover:bg-white hover:text-primary font-semibold px-8 py-4 text-lg transition-all duration-300"
               onClick={() => scrollToSection('constitution-section')}
             >
               Browse Constitution
