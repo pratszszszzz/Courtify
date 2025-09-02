@@ -40,28 +40,52 @@ const LegalHero = () => {
 
           {/* Feature Cards */}
           <div className="grid md:grid-cols-3 gap-6 mt-12">
-            <Card className="glass-effect p-6 border-white/20 hover:border-accent/50 transition-all duration-300 scale-in">
-              <MessageCircle className="w-12 h-12 text-accent mb-4 mx-auto" />
-              <h3 className="text-lg font-semibold text-white mb-2">Constitutional Q&A</h3>
-              <p className="text-white/80 text-sm">
-                Get instant answers about Indian Constitution articles, fundamental rights, and legal provisions
-              </p>
+            <Card className="bg-white/15 backdrop-blur-lg p-8 border border-white/30 hover:border-accent/60 hover:bg-white/20 transition-all duration-300 scale-in group hover:scale-105">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-accent/30 transition-colors">
+                  <MessageCircle className="w-8 h-8 text-accent" />
+                </div>
+                <h3 className="text-xl font-heading font-semibold text-white mb-3">Constitutional Q&A</h3>
+                <p className="text-white/90 text-sm leading-relaxed mb-4">
+                  Get instant answers about Indian Constitution articles, fundamental rights, and legal provisions
+                </p>
+                <div className="flex justify-center space-x-2 text-xs">
+                  <span className="bg-accent/20 text-accent px-2 py-1 rounded-full">Articles 1-395</span>
+                  <span className="bg-accent/20 text-accent px-2 py-1 rounded-full">24/7 Available</span>
+                </div>
+              </div>
             </Card>
 
-            <Card className="glass-effect p-6 border-white/20 hover:border-accent/50 transition-all duration-300 scale-in" style={{animationDelay: '0.2s'}}>
-              <FileText className="w-12 h-12 text-accent mb-4 mx-auto" />
-              <h3 className="text-lg font-semibold text-white mb-2">Document Analysis</h3>
-              <p className="text-white/80 text-sm">
-                Upload legal documents for AI-powered summarization and plain English explanations
-              </p>
+            <Card className="bg-white/15 backdrop-blur-lg p-8 border border-white/30 hover:border-accent/60 hover:bg-white/20 transition-all duration-300 scale-in group hover:scale-105" style={{animationDelay: '0.2s'}}>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-accent/30 transition-colors">
+                  <FileText className="w-8 h-8 text-accent" />
+                </div>
+                <h3 className="text-xl font-heading font-semibold text-white mb-3">Document Analysis</h3>
+                <p className="text-white/90 text-sm leading-relaxed mb-4">
+                  Upload legal documents for AI-powered summarization and plain English explanations
+                </p>
+                <div className="flex justify-center space-x-2 text-xs">
+                  <span className="bg-accent/20 text-accent px-2 py-1 rounded-full">PDF, DOC, TXT</span>
+                  <span className="bg-accent/20 text-accent px-2 py-1 rounded-full">AI Summary</span>
+                </div>
+              </div>
             </Card>
 
-            <Card className="glass-effect p-6 border-white/20 hover:border-accent/50 transition-all duration-300 scale-in" style={{animationDelay: '0.4s'}}>
-              <Scale className="w-12 h-12 text-accent mb-4 mx-auto" />
-              <h3 className="text-lg font-semibold text-white mb-2">Legal Guidance</h3>
-              <p className="text-white/80 text-sm">
-                Professional legal insights based on Indian law and constitutional framework
-              </p>
+            <Card className="bg-white/15 backdrop-blur-lg p-8 border border-white/30 hover:border-accent/60 hover:bg-white/20 transition-all duration-300 scale-in group hover:scale-105" style={{animationDelay: '0.4s'}}>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-accent/20 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-accent/30 transition-colors">
+                  <Scale className="w-8 h-8 text-accent" />
+                </div>
+                <h3 className="text-xl font-heading font-semibold text-white mb-3">Legal Guidance</h3>
+                <p className="text-white/90 text-sm leading-relaxed mb-4">
+                  Professional legal insights based on Indian law and constitutional framework
+                </p>
+                <div className="flex justify-center space-x-2 text-xs">
+                  <span className="bg-accent/20 text-accent px-2 py-1 rounded-full">Expert AI</span>
+                  <span className="bg-accent/20 text-accent px-2 py-1 rounded-full">Confidential</span>
+                </div>
+              </div>
             </Card>
           </div>
 
