@@ -1,3 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+*.egg
+.build/
+
+# Virtual envs and env files
+.venv/
+backend/.venv/
+.env
+backend/.env
+Courtify/.env*
+
 # Logs
 logs
 *.log
@@ -6,19 +21,43 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+backend/uvicorn*.log
+backend/uvicorn*.err
 
+# Vector indexes and uploads (generated at runtime)
+backend/storage/
+backend/uploads/
+
+# Node / Vite
 node_modules
 dist
 dist-ssr
 *.local
+Courtify/node_modules/
+Courtify/dist/
+Courtify/.vite/
+Courtify/bun.lockb
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Local large/example files
+Courtify/constitution.pdf
+
+# OS/Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Tests/Coverage
+.pytest_cache/
+.coverage
+htmlcov/
