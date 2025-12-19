@@ -290,3 +290,9 @@ Adjust volume paths and env file as needed for your environment.
 - **LLM provider** is currently wired for DeepSeek via `langchain-openai`. You can adapt `backend/app/llm.py` if you want to support different providers.
 - Frontend calls are centralized in `Courtify/src/lib/api.ts` – this is the main place to tweak routing or add new endpoints.
 - Document summarization/uploads are on the roadmap and currently disabled for end users.
+
+## Screenshots
+  <img width="1145" height="747" alt="Screenshot 2025-12-14 153602" src="https://github.com/user-attachments/assets/e8a2d30c-9fc1-435d-a071-799cf9b1909d" />
+  <img width="904" height="560" alt="Screenshot 2025-12-14 153953" src="https://github.com/user-attachments/assets/2c7587ef-58ed-4361-86e8-551fd83c9179" />
+
+
