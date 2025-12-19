@@ -49,7 +49,7 @@ Courtify/bun.lockb
 *.sln
 *.sw?
 
-# Local large/example files
+# Local large files
 Courtify/constitution.pdf
 
 # OS/Editor
