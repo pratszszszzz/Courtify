@@ -1,44 +1,39 @@
 from __future__ import annotations
 
 import os
+"""
+Ensure HuggingFace / Transformers do NOT try to import TensorFlow.
+TensorFlow in this environment has a protobuf version conflict, which was
+causing `sentence_transformers` imports to fail and breaking index builds.
+By setting this env var before importing HuggingFaceEmbeddings, we keep
+the stack purely PyTorch-based, which is all we need here.
+"""
+os.environ.setdefault("TRANSFORMERS_NO_TF", "1")
+import shutil
 from pathlib import Path
 from typing import List, Optional
-import re
 
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.vectorstores import Chroma
+from langchain_community.vectorstores import FAISS
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
+try:
+	import pdfplumber
+	exists_pdf = True
+except Exception:
+	exists_pdf = False
 
-DATA_PATH = Path(os.getenv("CONSTITUTION_PATH", "./data/indian_constitution.txt")).resolve()
-STORAGE_DIR = Path(os.getenv("STORAGE_DIR", "./storage")).resolve()
-INDEX_PATH = STORAGE_DIR / "faiss_index"
+try:
+	from PyPDF2 import PdfReader
+	exists_pypdf2 = True
+except Exception:
+	exists_pypdf2 = False
 
 
-def _read_constitution_text() -> str:
-	if not DATA_PATH.exists():
-		raise FileNotFoundError(f"Constitution file not found at {DATA_PATH}")
-	return DATA_PATH.read_text(encoding="utf-8", errors="ignore")
-
-
-def _chunk_text(text: str) -> List[str]:
-	# Article-aware first pass, then length-based sub-splitting
-	article_blocks = re.split(r"(?=\n?Article\s+[0-9]+[A-Z]?)", text, flags=re.IGNORECASE)
-	blocks = [b.strip() for b in article_blocks if b and b.strip()]
-
-	chunk_size = int(os.getenv("CHUNK_SIZE", "900"))
-	chunk_overlap = int(os.getenv("CHUNK_OVERLAP", "120"))
-	splitter = RecursiveCharacterTextSplitter(
-		separators=["\n\n", "\n", ". "],
-		chunk_size=chunk_size,
-		chunk_overlap=chunk_overlap,
-		length_function=len,
-	)
-
-	chunks: List[str] = []
-	for block in blocks:
-		chunks.extend(splitter.split_text(block))
-	return chunks
+_MODULE_ROOT = Path(__file__).resolve().parents[1]
+STORAGE_DIR = Path(os.getenv("STORAGE_DIR", str(_MODULE_ROOT / "storage"))).resolve()
+CONSTITUTION_PATH = _MODULE_ROOT / "data" / "indian_constitution.txt"
+BNS_PDF_PATH = Path(r"C:\Users\prath\Desktop\courtify\Courtify\a2023-45.pdf")
 
 
 def _get_embeddings_model() -> HuggingFaceEmbeddings:
@@ -46,40 +41,127 @@ def _get_embeddings_model() -> HuggingFaceEmbeddings:
 	return HuggingFaceEmbeddings(model_name=model_name)
 
 
-def build_or_load_vectorstore(force_rebuild: bool = False) -> Chroma:
+def _get_text_splitter() -> RecursiveCharacterTextSplitter:
+	chunk_size = int(os.getenv("CHUNK_SIZE", "1800"))
+	chunk_overlap = int(os.getenv("CHUNK_OVERLAP", "200"))
+	return RecursiveCharacterTextSplitter(
+		separators=["\n\n", "\n", ". "],
+		chunk_size=chunk_size,
+		chunk_overlap=chunk_overlap,
+		length_function=len,
+	)
+
+
+def _load_constitution() -> str:
+	if not CONSTITUTION_PATH.exists():
+		raise FileNotFoundError(f"Constitution not found at {CONSTITUTION_PATH}")
+	return CONSTITUTION_PATH.read_text(encoding="utf-8", errors="ignore")
+
+
+def _load_pdf(path: Path) -> str:
+	if not path.exists():
+		raise FileNotFoundError(f"PDF not found at {path}")
+	text = ""
+	# Try pdfplumber first
+	if exists_pdf:
+		try:
+			with pdfplumber.open(str(path)) as pdf:
+				pages = [pg.extract_text() or "" for pg in pdf.pages]
+				text = "\n\n".join(pages)
+				if text.strip():
+					return text
+		except Exception:
+			pass
+	# Fallback to PyPDF2
+	if exists_pypdf2:
+		try:
+			reader = PdfReader(str(path))
+			pages = [pg.extract_text() or "" for pg in reader.pages]
+			text = "\n\n".join(pages)
+		except Exception:
+			pass
+	return text
+
+
+def build_or_load_vectorstore(force_rebuild: bool = False) -> FAISS:
+	"""Build or load FAISS vectorstore with Constitution + BNS PDF."""
 	STORAGE_DIR.mkdir(parents=True, exist_ok=True)
-	chroma_path = STORAGE_DIR / "chroma_index"
-	if chroma_path.exists() and not force_rebuild:
-		return Chroma(persist_directory=str(chroma_path), embedding_function=_get_embeddings_model())
-
-	text = _read_constitution_text()
-	chunks = _chunk_text(text)
+	faiss_path = STORAGE_DIR / "faiss_index"
+	
+	if faiss_path.exists() and not force_rebuild:
+		embeddings = _get_embeddings_model()
+		return FAISS.load_local(str(faiss_path), embeddings, allow_dangerous_deserialization=True)
+	
+	if force_rebuild and faiss_path.exists():
+		try:
+			shutil.rmtree(faiss_path)
+		except Exception:
+			pass
+	
+	# Load documents
+	print("[index] Loading Constitution...")
+	constitution_text = _load_constitution()
+	print(f"[index] Constitution: {len(constitution_text):,} chars")
+	
+	print("[index] Loading BNS PDF...")
+	bns_text = _load_pdf(BNS_PDF_PATH)
+	print(f"[index] BNS PDF: {len(bns_text):,} chars")
+	
+	# Chunk
+	print("[index] Chunking documents...")
+	splitter = _get_text_splitter()
+	constitution_chunks = splitter.split_text(constitution_text)
+	print(f"[index] Constitution chunks: {len(constitution_chunks):,}")
+	
+	bns_chunks = splitter.split_text(bns_text) if bns_text.strip() else []
+	print(f"[index] BNS chunks: {len(bns_chunks):,}")
+	
+	all_texts = constitution_chunks + bns_chunks
+	print(f"[index] Total chunks: {len(all_texts):,}")
+	
+	if not all_texts:
+		raise ValueError("No documents to index")
+	
+	# Build FAISS index
+	print("[index] Building embeddings (this may take 2-3 minutes)...")
 	embeddings = _get_embeddings_model()
-
-	def detect_article_label(chunk: str) -> str:
-		m = re.search(r"Article\s+([0-9]+[A-Z]?)", chunk, flags=re.IGNORECASE)
-		if m:
-			return f"Article {m.group(1)}"
-		if chunk.strip().lower().startswith("preamble"):
-			return "Preamble"
-		m2 = re.search(r"Part\s+([IVXLC]+)\b", chunk)
-		if m2:
-			return f"Part {m2.group(1)}"
-		return "Unknown"
-
-	metadatas = [{"chunk_id": i, "article": detect_article_label(ch)} for i, ch in enumerate(chunks)]
-	store = Chroma.from_texts(chunks, embedding=embeddings, metadatas=metadatas, persist_directory=str(chroma_path))
-	store.persist()
-	return store
+	print("[index] Creating FAISS index...")
+	vectorstore = FAISS.from_texts(all_texts, embeddings)
+	print("[index] Saving index to disk...")
+	vectorstore.save_local(str(faiss_path))
+	print(f"[index] SUCCESS: FAISS index saved to {faiss_path}")
+	
+	return vectorstore
 
 
-_vectorstore: Optional[Chroma] = None
+_vectorstore: Optional[FAISS] = None
 
 
 def get_retriever(k: int = 6):
+	"""Get similarity retriever from FAISS index."""
 	global _vectorstore
 	if _vectorstore is None:
 		_vectorstore = build_or_load_vectorstore()
-	return _vectorstore.as_retriever(search_kwargs={"k": k, "fetch_k": max(20, k*3), "mmr": True, "lambda_mult": 0.5})
+	# Use similarity search instead of MMR for better article text retrieval
+	return _vectorstore.as_retriever(
+		search_type="similarity",
+		search_kwargs={"k": k}
+	)
 
 
+def get_index_status() -> dict:
+	"""Return basic information about the FAISS index."""
+	global _vectorstore
+	try:
+		if _vectorstore is None:
+			_vectorstore = build_or_load_vectorstore()
+		count = _vectorstore.index.ntotal if hasattr(_vectorstore, 'index') else -1
+		return {
+			"ok": True,
+			"type": "FAISS",
+			"persist_directory": str(STORAGE_DIR / "faiss_index"),
+			"embedding_model": os.getenv("EMBEDDINGS_MODEL", "sentence-transformers/all-MiniLM-L6-v2"),
+			"count": count,
+		}
+	except Exception as e:
+		return {"ok": False, "error": f"{type(e).__name__}: {e}"}

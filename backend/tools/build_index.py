@@ -1,19 +1,16 @@
-import os
-from pathlib import Path
-from app.rag import build_or_load_vectorstore, _read_constitution_text, _chunk_text
+import argparse
+from app.rag import build_or_load_vectorstore
 
 
 def main():
-	print("[index] Reading corpus and computing chunks...")
-	text = _read_constitution_text()
-	chunks = _chunk_text(text)
-	print(f"[index] Corpus chars: {len(text):,} | chunks: {len(chunks):,}")
-	print("[index] Rebuilding FAISS index (force=true)...")
-	store = build_or_load_vectorstore(force_rebuild=True)
-	print("[index] Ready. Index contains:", store.index.ntotal, "vectors")
+	parser = argparse.ArgumentParser(description="Build FAISS index from Constitution + BNS PDF")
+	parser.add_argument("--force", action="store_true", help="Force rebuild index")
+	args = parser.parse_args()
+	
+	print("[index] Building FAISS index with Constitution + BNS PDF...")
+	vectorstore = build_or_load_vectorstore(force_rebuild=args.force)
+	print("[index] Ready.")
 
 
 if __name__ == "__main__":
 	main()
-
-

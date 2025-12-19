@@ -27,6 +27,7 @@ backend/uvicorn*.err
 # Vector indexes and uploads (generated at runtime)
 backend/storage/
 backend/uploads/
+backend/storage_combined/
 
 # Node / Vite
 node_modules

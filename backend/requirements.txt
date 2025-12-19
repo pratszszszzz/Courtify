@@ -8,12 +8,17 @@ langchain-community==0.2.9
 langsmith==0.1.147
 langchain-openai==0.1.25
 langchain-google-genai==1.0.7
-google-generativeai>=0.8.3
+# Pin compatible range for langchain-google-genai 1.0.7
+google-generativeai>=0.7.0,<0.8.0
 sentence-transformers==3.0.1
-faiss-cpu==1.8.0.post1
 chromadb==0.4.24
 PyPDF2==3.0.1
 pdfplumber==0.11.4
 openai>=1.40.0
 python-multipart>=0.0.9
 
+# For parquet/dataset ingestion
+pandas>=2.0.0
+pyarrow>=15.0.0
+
+duckduckgo-search>=5.3.0
