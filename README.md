@@ -4,6 +4,8 @@ Courtify is a full‑stack Indian legal assistant that lets you:
 
 - Ask **Constitution & BNS‑aware legal questions** via a RAG (Retrieval‑Augmented Generation) backend
 - Explore this functionality through a **modern React + Vite + Tailwind + shadcn/ui frontend**
+ <img width="1894" height="907" alt="image" src="https://github.com/user-attachments/assets/c8195cf0-1173-4dfb-9acb-48c4f635b381" />
+
 - Document summarization is a **future/roadmap** capability (not enabled yet)
 
 The project is split into a **FastAPI backend** and a **Vite/React frontend**.
